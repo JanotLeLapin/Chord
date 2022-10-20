@@ -8,3 +8,8 @@ chord_api = { path = "../api", package = "api" }
 
 tokio = { version = "1", features = ["full"] }
 
+serde = { version = "*", features = ["derive"] }
+toml = "*"
+
+dirs = "4"
+

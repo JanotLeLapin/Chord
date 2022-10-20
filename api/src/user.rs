@@ -4,19 +4,11 @@ use std::error::Error;
 use serde::Deserialize;
 use serde_json::json;
 
-pub static URL: &str = "https://discord.com/api/v9";
+use crate::URL;
 
-#[derive(Deserialize, Debug)]
-pub struct UserSettings {
-    locale: String,
-    theme: String,
-}
-
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct LoginResponse {
     token: String,
-    user_settings: UserSettings,
-    user_id: String,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -28,7 +20,7 @@ impl Display for LoginError {
 }
 impl Error for LoginError {}
 
-pub async fn login(login: &str, password: &str) -> Result<LoginResponse, Box<dyn Error>> {
+pub async fn login(login: &str, password: &str) -> Result<reqwest::Client, Box<dyn Error>> {
     let res = reqwest::Client::new()
         .post(format!("{}/auth/login", URL))
         .body(json!({
@@ -38,9 +30,34 @@ pub async fn login(login: &str, password: &str) -> Result<LoginResponse, Box<dyn
         .header("Content-Type", "application/json")
         .send().await?;
 
-    match res.status().as_u16() {
-        200 => Ok(res.json::<LoginResponse>().await?),
+    let token = res.json::<LoginResponse>().await?.token;
+
+    let mut headers = reqwest::header::HeaderMap::new();
+    headers.insert("Content-Type", "application/json".parse().unwrap());
+    headers.insert("Authorization", token.parse().unwrap());
+
+    let client = reqwest::ClientBuilder::new()
+        .default_headers(headers)
+        .build()?;
+
+    match 200 {
+        200 => Ok(client),
         _ => Err(Box::new(LoginError::default()))
     }
+}
+
+#[derive(Deserialize,Clone)]
+pub struct User {
+    id: String,
+    username: String,
+    discriminator: String,
+    avatar: Option<String>,
+}
+
+impl User {
+    pub fn get_id(&self) -> String { self.id.clone() }
+    pub fn get_name(&self) -> String { self.username.clone() }
+    pub fn get_discriminator(&self) -> String { self.discriminator.clone() }
+    pub fn get_avatar(&self) -> Option<String> { self.avatar.clone() }
 }
 

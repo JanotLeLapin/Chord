@@ -1,0 +1,10 @@
+[package]
+name = "chord"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+chord_api = { path = "../api", package = "api" }
+
+tokio = { version = "1", features = ["full"] }
+

@@ -1,4 +1,4 @@
-use chord_api::{auth,message};
+use chord_api::{auth,user};
 
 #[tokio::main]
 pub async fn main() {
@@ -16,18 +16,14 @@ pub async fn main() {
     // Fetch authorization token from discord with credentials
     let client = auth::login(login, password).await.unwrap();
 
-    // Get messages from some channel and print them out
-    let messages = message::fetch_messages(&client, "973573920613597207", 50).await.unwrap();
-
-    for i in (1..messages.len()).rev() {
-        let msg = &messages[i-1];
-
-        let author = msg.get_author();
-        if author.get_id() == messages[i].get_author().get_id() {
-            println!("{}", msg.get_content());
-        } else {
-            println!("\n{}#{} à {}:\n{}", author.get_name(), author.get_discriminator(), msg.get_timestamp().to_string(), msg.get_content());
-        }
+    for id in vec!["969296752131842178", "437953881914474523", "539547679097749566"] {
+        let user = user::fetch_user(&client, id).await.unwrap();
+        println!(
+            "{}#{} {}",
+            user.get_name(),
+            user.get_discriminator(),
+            user.get_avatar().unwrap_or("no avatar :(".to_string()),
+        );
     }
 }
 

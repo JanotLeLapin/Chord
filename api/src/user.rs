@@ -2,7 +2,7 @@ use std::error::Error;
 
 use serde::Deserialize;
 
-use crate::URL;
+use crate::{URL,CDN};
 
 #[derive(Deserialize,Clone)]
 pub struct User {
@@ -17,6 +17,9 @@ impl User {
     pub fn get_name(&self) -> String { self.username.clone() }
     pub fn get_discriminator(&self) -> String { self.discriminator.clone() }
     pub fn get_avatar(&self) -> Option<String> { self.avatar.clone() }
+    pub fn get_avatar_url(&self) -> Option<String> {
+        self.avatar.as_ref().map(|avatar| format!("{}/avatars/{}/{}", CDN, &self.id, avatar))
+    }
 }
 
 pub async fn fetch_current_user(client: &reqwest::Client) -> Result<User, Box<dyn Error>> {

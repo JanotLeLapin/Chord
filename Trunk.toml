@@ -1,0 +1,4 @@
+[build]
+target = "front/index.html"
+dist = "./dist"
+

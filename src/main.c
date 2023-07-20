@@ -15,7 +15,7 @@ void middle_print(struct ncplane *n, char *text) {
   unsigned int x;
   ncplane_dim_yx(n, &y, &x);
 
-  ncplane_printf_yx(n, y / 2, (x / 2) - (strlen(text) / 2), text);
+  ncplane_printf_yx(n, y / 2, (x / 2) - (strlen(text) / 2), "%s", text);
 }
 
 static size_t callback(void *contents, size_t size, size_t nmemb, void *data) {
@@ -65,33 +65,45 @@ int main() {
     printf("Whoops\n");
   }
 
-  user user_1 = {
-    .name = "Foo",
-    .status = 0,
-  };
-
-  user user_2 = {
-    .name = "Bar",
-    .status = 0,
-  };
-
-  user user_3 = {
-    .name = "Baz",
-    .status = 0,
-  };
-
+  // Test data
   user *users = malloc(3);
-  *users = user_1;
-  *(users + (sizeof(user))) = user_2;
-  *(users + (sizeof(user) * 2)) = user_3;
+  *users = (user) { .name = "Foo", .status = 0 };
+  *(users + (sizeof(user))) = (user) { .name = "Bar", .status = 1 };
+  *(users + (sizeof(user) * 2)) = (user) { .name = "Baz", .status = 0 };
+
+  message *messages = malloc(2);
+  *messages = (message) { .id = "azerty", .content = "Hello", .author = users };
+  *(messages + (sizeof(message))) = (message) { .id = "qwerty", .content = "World!", .author = users };
 
   while (true) {
+    // Layout
+    unsigned int y;
+    unsigned int x;
+    ncplane_dim_yx(n, &y, &x);
+
+    ui_box userlist_box = {
+      .begx = x - 32,
+      .begy = 0,
+      .endx = x,
+      .endy = y,
+    };
+
+    ui_box messages_box = {
+      .begx = 32,
+      .begy = 0,
+      .endx = x - 32,
+      .endy = y - 3,
+    };
+
     ui_clear(n);
-    ui_draw_userlist(n, users, 3, 32);
+    ui_draw_messages(n, messages, 2, &messages_box);
+    ui_draw_userlist(n, users, 3, &userlist_box);
 
     ncpile_render(n);
     notcurses_render(nc);
   }
+  
+  while (true) {}
 
   notcurses_leave_alternate_screen(nc);
   notcurses_stop(nc);

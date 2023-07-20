@@ -1,3 +1,6 @@
+#include "include/structures.h"
+#include "include/ui.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,7 +65,30 @@ int main() {
     printf("Whoops\n");
   }
 
+  user user_1 = {
+    .name = "Foo",
+    .status = 0,
+  };
+
+  user user_2 = {
+    .name = "Bar",
+    .status = 0,
+  };
+
+  user user_3 = {
+    .name = "Baz",
+    .status = 0,
+  };
+
+  user *users = malloc(3);
+  *users = user_1;
+  *(users + (sizeof(user))) = user_2;
+  *(users + (sizeof(user) * 2)) = user_3;
+
   while (true) {
+    ui_clear(n);
+    ui_draw_userlist(n, users, 3, 32);
+
     ncpile_render(n);
     notcurses_render(nc);
   }

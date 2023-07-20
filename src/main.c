@@ -1,11 +1,8 @@
-#include "include/structures.h"
-#include "include/ui.h"
+#include "structures.h"
+#include "ui.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <notcurses/direct.h>
-#include <notcurses/notcurses.h>
 #include <curl/curl.h>
 #include <json-c/json_tokener.h>
 #include <json-c/json_object.h>

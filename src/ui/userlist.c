@@ -1,6 +1,5 @@
-#include "include/colors.h"
-#include "include/ui.h"
-#include <notcurses/notcurses.h>
+#include "colors.h"
+#include "ui.h"
 
 void ui_draw_userlist(struct ncplane *n, user *users, int user_count, ui_box *box) {
   chord_bg_alt(n);

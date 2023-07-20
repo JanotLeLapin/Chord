@@ -1,5 +1,5 @@
-#include "include/colors.h"
-#include "include/ui.h"
+#include "colors.h"
+#include "ui.h"
 
 void ui_draw_rect(struct ncplane *n, int begx, int begy, int endx, int endy) {
   int w = endx - begx;

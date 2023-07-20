@@ -1,10 +1,8 @@
 #include "colors.h"
-#include "include/ui.h"
-#include "include/structures.h"
+#include "ui.h"
+#include "structures.h"
 
 #include <math.h>
-#include <notcurses/notcurses.h>
-#include <stdio.h>
 #include <stdlib.h>
 
 void ui_draw_messages(struct ncplane *n, message *messages, int message_count, ui_box *box) {

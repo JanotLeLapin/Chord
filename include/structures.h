@@ -1,12 +1,17 @@
 #pragma once
 
 typedef struct user {
-  char *name;
-  char status;
+  unsigned long *id;
+  char *username;
+  char *discriminator;
+  char *global_name;
+  char *avatar;
 } user;
 
 typedef struct message {
-  char *id;
+  unsigned long *id;
   char *content;
   user *author;
 } message;
+
+user *discord_parse_user(char *json);

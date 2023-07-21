@@ -19,7 +19,7 @@ void ui_draw_messages(struct ncplane *n, message *messages, int message_count, u
 
     chord_fg_alt(n);
     ncplane_set_styles(n, NCSTYLE_BOLD);
-    ncplane_printf_yx(n, row-1, box->begx, "%s:", msg.author->name);
+    ncplane_printf_yx(n, row-1, box->begx, "%s:", msg.author->username);
 
     ncplane_set_styles(n, 0);
     row -= 3;

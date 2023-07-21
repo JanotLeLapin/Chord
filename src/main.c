@@ -94,12 +94,12 @@ int main() {
     ui_draw_profile(n, &u, &profile_box);
 
     ncinput in;
-    notcurses_get(nc, NULL, &in);
+    int id = notcurses_get_nblock(nc, &in);
 
     ncpile_render(n);
     notcurses_render(nc);
 
-    if (in.id == 27) {
+    if (id == 27) {
       break;
     }
   }

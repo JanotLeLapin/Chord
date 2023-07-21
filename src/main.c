@@ -2,19 +2,8 @@
 #include "structures.h"
 #include "ui.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <curl/curl.h>
-#include <notcurses/notcurses.h>
-
-void middle_print(struct ncplane *n, const char *text) {
-  unsigned int y;
-  unsigned int x;
-  ncplane_dim_yx(n, &y, &x);
-
-  ncplane_printf_yx(n, y / 2, (x / 2) - (strlen(text) / 2), "%s", text);
-}
 
 static size_t callback(char *contents, size_t size, size_t nmemb, void *data) {
   user *u = (user *) data;
@@ -23,16 +12,14 @@ static size_t callback(char *contents, size_t size, size_t nmemb, void *data) {
   return size * nmemb;
 }
 
-int main() {
-  // CURL
-  CURL *curl = curl_easy_init();
-  if (!curl) {
-    printf("Could not initialize CURL.\n");
-    return -1;
-  }
+static size_t default_callback(char *contents, size_t size, size_t nmemb, void *data) {
+  return size * nmemb;
+}
 
+int main() {
   // Discord API
-  char *token = malloc(75);
+  CURL *curl;
+  char *token = malloc(71);
   FILE *f = fopen("token", "r");
 
   if (NULL == f) {
@@ -40,12 +27,22 @@ int main() {
     return -1;
   }
 
-  fgets(token, 75, f);
-  discord *d = api_init(curl, token);
+  fgets(token, 71, f);
+
+  char *auth = malloc(100 * sizeof(char));
+  snprintf(auth, 100 * sizeof(char), "Authorization: %s", token);
 
   free(token);
   fclose(f);
 
+  curl = curl_easy_init();
+  api_create_message(curl, auth, "1132018104734580767", "Nez", default_callback);
+  curl_easy_cleanup(curl);
+
+  curl = curl_easy_init();
+  api_create_message(curl, auth, "1132018104734580767", "Lesieur", default_callback);
+  curl_easy_cleanup(curl);
+  
   // notcurses
   notcurses_options opts = {};
   struct notcurses *nc = notcurses_core_init(&opts, stdout);
@@ -60,8 +57,10 @@ int main() {
   struct ncplane *n = notcurses_stdplane(nc);
 
   user u;
+  curl = curl_easy_init();
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &u);
-  api_get_current_user(d, callback);
+  api_get_current_user(curl, auth, callback);
+  curl_easy_cleanup(curl);
 
   char *message = malloc(3001 * sizeof(char));
   short message_len = 0;
@@ -111,19 +110,19 @@ int main() {
     ncinput in;
     int id = notcurses_get_nblock(nc, &in);
 
-    /*
-    if (id != 0) {
-      char *res = malloc(10 * sizeof(char));
-      snprintf(res, 10 * sizeof(char), "%d ", id);
-      strcat(message, res);
-      free(res);
-    }
-    */
-
-    if (in.evtype != NCTYPE_RELEASE) {
+    if (in.evtype == NCTYPE_PRESS || in.evtype == NCTYPE_REPEAT) {
       if (1115008 == id && message_len > 0) {
         message_len -= sizeof(char);
         *(message+message_len) = '\0';
+      }
+
+      if (1115121 == id && message_len > 0) {
+        curl = curl_easy_init();
+        api_create_message(curl, auth, "1132018104734580767", message, default_callback);
+        curl_easy_cleanup(curl);
+
+        *message = '\0';
+        message_len = 0;
       }
 
       if (id >= 32 && id <= 126) {
@@ -145,8 +144,6 @@ int main() {
 
   notcurses_leave_alternate_screen(nc);
   notcurses_stop(nc);
-
-  curl_easy_cleanup(curl);
 
   return 0;
 }

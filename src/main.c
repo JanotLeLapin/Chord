@@ -1,13 +1,13 @@
+#include "api.h"
 #include "structures.h"
 #include "ui.h"
 
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
-#include <json-c/json_tokener.h>
-#include <json-c/json_object.h>
+#include <notcurses/notcurses.h>
 
-void middle_print(struct ncplane *n, char *text) {
+void middle_print(struct ncplane *n, const char *text) {
   unsigned int y;
   unsigned int x;
   ncplane_dim_yx(n, &y, &x);
@@ -15,32 +15,23 @@ void middle_print(struct ncplane *n, char *text) {
   ncplane_printf_yx(n, y / 2, (x / 2) - (strlen(text) / 2), "%s", text);
 }
 
-static size_t callback(void *contents, size_t size, size_t nmemb, void *data) {
-  struct ncplane *n = (struct ncplane *) data;
-
-  char* txt = malloc(64);
-  strcpy(txt, "Welcome: ");
-  struct json_object *obj = json_tokener_parse(contents);
-  for (int i = 0; i < json_object_array_length(obj); i++) {
-    json_object *elem = json_object_array_get_idx(obj, i);
-    strcat(txt, json_object_get_string(elem));
-    strcat(txt, " ");
-  }
-
-  middle_print(n, txt);
+static size_t callback(char *contents, size_t size, size_t nmemb, void *data) {
+  user *u = (user *) data;
+  *u = *discord_parse_user(contents);
+  
   return size * nmemb;
 }
 
 int main() {
-  notcurses_options opts = {};
-  struct notcurses *nc = notcurses_core_init(&opts, stdout);
-  if (NULL == nc) {
+  CURL *curl = curl_easy_init();
+  if (!curl) {
     printf("Whoops\n");
     return -1;
   }
 
-  CURL *curl = curl_easy_init();
-  if (!curl) {
+  notcurses_options opts = {};
+  struct notcurses *nc = notcurses_core_init(&opts, stdout);
+  if (NULL == nc) {
     printf("Whoops\n");
     return -1;
   }
@@ -52,25 +43,9 @@ int main() {
   ncpile_render(n);
   notcurses_render(nc);
 
-  curl_easy_setopt(curl, CURLOPT_URL, "https://random-word-api.herokuapp.com/word?number=3");
-  curl_easy_setopt(curl, CURLOPT_WRITEDATA, n);
-  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback);
-
-  CURLcode res = curl_easy_perform(curl);
-
-  if (res != CURLE_OK) {
-    printf("Whoops\n");
-  }
-
-  // Test data
-  user *users = malloc(3);
-  *users = (user) { .name = "Foo", .status = 0 };
-  *(users + (sizeof(user))) = (user) { .name = "Bar", .status = 1 };
-  *(users + (sizeof(user) * 2)) = (user) { .name = "Baz", .status = 0 };
-
-  message *messages = malloc(2);
-  *messages = (message) { .id = "azerty", .content = "Hello", .author = users };
-  *(messages + (sizeof(message))) = (message) { .id = "qwerty", .content = "World!", .author = users };
+  user u;
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &u);
+  api_get_current_user(curl, callback);
 
   while (true) {
     // Layout
@@ -92,15 +67,22 @@ int main() {
       .endy = y - 3,
     };
 
-    ui_clear(n);
-    ui_draw_messages(n, messages, 2, &messages_box);
-    ui_draw_userlist(n, users, 3, &userlist_box);
+    ui_box profile_box = {
+      .begx = 0,
+      .begy = y - 4,
+      .endx = 32,
+      .endy = y,
+    };
+
+    // ui_draw_messages(n, messages, 2, &messages_box);
+    // ui_draw_userlist(n, users, 3, &userlist_box);
+    ui_draw_profile(n, &u, &profile_box);
 
     ncpile_render(n);
     notcurses_render(nc);
+
+    ui_clear(n);
   }
-  
-  while (true) {}
 
   notcurses_leave_alternate_screen(nc);
   notcurses_stop(nc);

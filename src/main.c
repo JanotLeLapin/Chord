@@ -26,13 +26,19 @@ int main() {
   // CURL
   CURL *curl = curl_easy_init();
   if (!curl) {
-    printf("Whoops\n");
+    printf("Could not initialize CURL.\n");
     return -1;
   }
 
   // Discord API
   char *token = malloc(75);
   FILE *f = fopen("token", "r");
+
+  if (NULL == f) {
+    printf("Could not access token. Be sure to have a token file in the current directory containing your Discord token.\n");
+    return -1;
+  }
+
   fgets(token, 75, f);
   discord *d = api_init(curl, token);
 
@@ -43,7 +49,7 @@ int main() {
   notcurses_options opts = {};
   struct notcurses *nc = notcurses_core_init(&opts, stdout);
   if (NULL == nc) {
-    printf("Whoops\n");
+    printf("Could not initialize notcurses.\n");
     return -1;
   }
   notcurses_enter_alternate_screen(nc);

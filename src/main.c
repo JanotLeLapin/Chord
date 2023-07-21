@@ -2,6 +2,7 @@
 #include "structures.h"
 #include "ui.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
@@ -29,6 +30,12 @@ int main() {
     return -1;
   }
 
+  char *token = malloc(75);
+  FILE *f = fopen("token", "r");
+  fgets(token, 75, f);
+
+  discord *d = api_init(curl, token);
+
   notcurses_options opts = {};
   struct notcurses *nc = notcurses_core_init(&opts, stdout);
   if (NULL == nc) {
@@ -45,7 +52,7 @@ int main() {
 
   user u;
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &u);
-  api_get_current_user(curl, callback);
+  api_get_current_user(d, callback);
 
   while (true) {
     // Layout

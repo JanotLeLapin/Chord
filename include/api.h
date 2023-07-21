@@ -4,7 +4,13 @@
 
 #include <curl/curl.h>
 
-char *api_url(char *path);
+typedef struct discord {
+  CURL *curl;
+  char *auth_header;
+} discord;
+
+discord *api_init(CURL *curl, char *token);
+CURLcode api_request(discord *d, char *path, curl_write_callback callback);
 
 // USER
-CURLcode api_get_current_user(CURL *curl, curl_write_callback callback);
+CURLcode api_get_current_user(discord *d, curl_write_callback callback);

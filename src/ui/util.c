@@ -3,7 +3,7 @@
 
 void ui_draw_rect(struct ncplane *n, int begx, int begy, int endx, int endy) {
   int w = endx - begx;
-  char *str = malloc(w);
+  char *str = malloc((w + 1) * sizeof(char));
 
   for (int i = 0; i < w; i++) {
     *(str+i) = ' ';
@@ -13,12 +13,11 @@ void ui_draw_rect(struct ncplane *n, int begx, int begy, int endx, int endy) {
   for (int i = 0; i < h; i++) {
     ncplane_printf_yx(n, i, begx, "%s", str);
   }
+
+  free(str);
 }
 
-void ui_clear(struct ncplane *n) {
+void ui_clear(struct ncplane *n, int x, int y) {
   chord_bg_default(n);
-  unsigned int y;
-  unsigned int x;
-  ncplane_dim_yx(n, &y, &x);
   ui_draw_rect(n, 0, 0, x, y);
 }

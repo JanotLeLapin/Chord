@@ -2,7 +2,6 @@
 #include "structures.h"
 #include "ui.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
@@ -24,31 +23,29 @@ static size_t callback(char *contents, size_t size, size_t nmemb, void *data) {
 }
 
 int main() {
+  // CURL
   CURL *curl = curl_easy_init();
   if (!curl) {
     printf("Whoops\n");
     return -1;
   }
 
+  // Discord API
   char *token = malloc(75);
   FILE *f = fopen("token", "r");
   fgets(token, 75, f);
-
   discord *d = api_init(curl, token);
 
+  // notcurses
   notcurses_options opts = {};
   struct notcurses *nc = notcurses_core_init(&opts, stdout);
   if (NULL == nc) {
     printf("Whoops\n");
     return -1;
   }
-
   notcurses_enter_alternate_screen(nc);
 
   struct ncplane *n = notcurses_stdplane(nc);
-  middle_print(n, "Loading...");
-  ncpile_render(n);
-  notcurses_render(nc);
 
   user u;
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &u);
@@ -81,14 +78,21 @@ int main() {
       .endy = y,
     };
 
+    ui_clear(n, x, y);
+
     // ui_draw_messages(n, messages, 2, &messages_box);
     // ui_draw_userlist(n, users, 3, &userlist_box);
     ui_draw_profile(n, &u, &profile_box);
 
+    ncinput in;
+    notcurses_get(nc, NULL, &in);
+
     ncpile_render(n);
     notcurses_render(nc);
 
-    ui_clear(n);
+    if (in.id == 27) {
+      break;
+    }
   }
 
   notcurses_leave_alternate_screen(nc);

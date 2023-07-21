@@ -2,6 +2,7 @@
 #include "structures.h"
 #include "ui.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <curl/curl.h>
@@ -52,6 +53,8 @@ int main() {
     printf("Could not initialize notcurses.\n");
     return -1;
   }
+
+  notcurses_linesigs_disable(nc);
   notcurses_enter_alternate_screen(nc);
 
   struct ncplane *n = notcurses_stdplane(nc);
@@ -59,6 +62,10 @@ int main() {
   user u;
   curl_easy_setopt(curl, CURLOPT_WRITEDATA, &u);
   api_get_current_user(d, callback);
+
+  char *message = malloc(3001 * sizeof(char));
+  short message_len = 0;
+  *message = '\0';
 
   while (true) {
     // Layout
@@ -80,6 +87,13 @@ int main() {
       .endy = y - 3,
     };
 
+    ui_box input_box = {
+      .begx = 32,
+      .begy = y - 2,
+      .endx = x - 32,
+      .endy = y - 2,
+    };
+
     ui_box profile_box = {
       .begx = 0,
       .begy = y - 4,
@@ -91,15 +105,40 @@ int main() {
 
     // ui_draw_messages(n, messages, 2, &messages_box);
     // ui_draw_userlist(n, users, 3, &userlist_box);
+    ui_draw_input(n, message, &input_box);
     ui_draw_profile(n, &u, &profile_box);
 
     ncinput in;
     int id = notcurses_get_nblock(nc, &in);
 
+    /*
+    if (id != 0) {
+      char *res = malloc(10 * sizeof(char));
+      snprintf(res, 10 * sizeof(char), "%d ", id);
+      strcat(message, res);
+      free(res);
+    }
+    */
+
+    if (in.evtype != NCTYPE_RELEASE) {
+      if (1115008 == id && message_len > 0) {
+        message_len -= sizeof(char);
+        *(message+message_len) = '\0';
+      }
+
+      if (id >= 32 && id <= 126) {
+        if (in.evtype) {
+          *(message+message_len) = (char) id;
+          *(message+message_len+sizeof(char)) = '\0';
+          message_len+=sizeof(char);
+        }
+      }
+    }
+
     ncpile_render(n);
     notcurses_render(nc);
 
-    if (id == 27) {
+    if (27 == id) {
       break;
     }
   }

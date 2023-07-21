@@ -36,6 +36,9 @@ int main() {
   fgets(token, 75, f);
   discord *d = api_init(curl, token);
 
+  free(token);
+  fclose(f);
+
   // notcurses
   notcurses_options opts = {};
   struct notcurses *nc = notcurses_core_init(&opts, stdout);
